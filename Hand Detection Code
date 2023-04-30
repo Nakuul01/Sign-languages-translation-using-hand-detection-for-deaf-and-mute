@@ -1,0 +1,153 @@
+print(&quot;0 = no &quot;)
+print(&quot;1 = ok&quot;)
+print(&quot;2 = medicine&quot;)
+print(&quot;3 = food&quot;)
+print(&quot;4 = bye&quot;)
+print(&quot;5 = hi&quot;)
+print(&quot;6 = yes&quot;)
+print(&quot;7 = water&quot;)
+import cv2
+import media-pipe as mp
+import time
+class handDetector():
+def _init_(self, mode=False, maxHands=2,
+detectionCon=0.5,modelComplexity=1,trackCon=0.5):
+self.mode = mode
+self.maxHands = maxHands
+self.detectionCon = detectionCon
+
+self.modelComplex = modelComplexity
+self.trackCon = trackCon
+self.mpHands = mp.solutions.hands
+self.hands = self.mpHands.Hands(self.mode,
+self.maxHands,self.modelComplex,
+self.detectionCon, self.trackCon)
+self.mpDraw = mp.solutions.drawing_utils # it gives small dots on hands
+total 20 landmark points
+
+def findHands(self,img,draw=True):
+# Send rgb image to hands
+imgRGB = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+self.results = self.hands.process(imgRGB) # process the frame
+# print(results.multi_hand_landmarks)
+
+if self.results.multi_hand_landmarks:
+for handLms in self.results.multi_hand_landmarks:
+
+if draw:
+#Draw dots and connect them
+self.mpDraw.draw_landmarks(img,handLms,
+self.mpHands.HAND_CONNECTIONS)
+
+return img
+def findPosition(self,img, handNo=0, draw=True):
+
+lmlist = []
+
+# check wether any landmark was detected
+if self.results.multi_hand_landmarks:
+#Which hand are we talking about
+myHand = self.results.multi_hand_landmarks[handNo]
+# Get id number and landmark information
+for id, lm in enumerate(myHand.landmark):
+# id will give id of landmark in exact index number
+# height width and channel
+h,w,c = img.shape
+#find the position
+cx,cy = int(lm.x*w), int(lm.y*h) #center
+# print(id,cx,cy)
+lmlist.append([id,cx,cy])
+
+# Draw circle for 0th landmark
+if draw:
+cv2.circle(img,(cx,cy), 15 , (255,0,255), cv2.FILLED)
+
+return lmlist
+
+def getNumber(ar):
+s = &quot;&quot;
+for i in ar:
+s += str(ar[i]);
+
+if (s == &quot;00000&quot;):
+return (0)
+
+elif (s == &quot;01000&quot;):
+return (1)
+elif (s == &quot;01100&quot;):
+return (2)
+elif (s == &quot;01110&quot;):
+return (3)
+elif (s == &quot;01111&quot;):
+return (4)
+elif (s == &quot;11111&quot;):
+return (5)
+elif (s == &quot;01001&quot;):
+return (6)
+elif (s == &quot;01011&quot;):
+return (7)
+wcam, hcam = 640,480
+cap = cv2.VideoCapture(0)
+cap.set(3, wcam)
+cap.set(4, hcam)
+pTime = 0
+detector=handDetector(detectionCon=0.75)
+while True:
+success, img = cap.read()
+img = detector.findHands(img, draw=True)
+lmList = detector.findPosition(img, draw=False)
+#print(results.multi_hand_landmarks)
+
+tipId = [4, 8, 12, 16, 20]
+if (len(lmList) != 0):
+fingers = []
+
+# thumb
+if (lmList[tipId[0]][1] &gt; lmList[tipId[0] - 1][1]):
+fingers.append(1)
+else:
+fingers.append(0)
+# 4 fingers
+for id in range(1, len(tipId)):
+if (lmList[tipId[id]][2] &lt; lmList[tipId[id] - 2][2]):
+fingers.append(1)
+else:
+fingers.append(0)
+
+# cv2.rectangle(img, (20, 255), (170, 425), (0, 255, 0), cv2.FILLED)
+
+if str(getNumber(fingers)) ==&quot;0&quot;:
+cv2.putText(img,&#39;no&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;1&quot;:
+cv2.putText(img,&#39;ok&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;2&quot;:
+cv2.putText(img,&#39;medicine&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;3&quot;:
+cv2.putText(img,&#39;food&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;4&quot;:
+cv2.putText(img,&#39;bye&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+
+if str(getNumber(fingers)) ==&quot;5&quot;:
+cv2.putText(img,&#39;hi&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;6&quot;:
+cv2.putText(img,&#39;yes&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+if str(getNumber(fingers)) ==&quot;7&quot;:
+cv2.putText(img,&#39;water&#39;, (45, 375), cv2.FONT_HERSHEY_PLAIN,
+3, (255, 0, 0), 3)
+
+cTime = time.time()
+fps = 1/(cTime-pTime)
+pTime = cTime
+
+cv2.putText(img, f&#39;FPS: {int(fps)}&#39;, (400,70), cv2.FONT_HERSHEY_PLAIN,
+1, (255,0,255), 3)
+
+cv2.imshow(&quot;Image&quot;, img)
+if (cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;)): break
